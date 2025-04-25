@@ -1,0 +1,12 @@
+name: roller_env
+channels:
+  - defaults
+dependencies:
+  - python>=3.8
+  - pip
+  - numpy==1.23.1
+  # You can add more Conda packages here  
+  # - scipy
+  - pip:
+      - pyglet>=2.1.0
+      # - another-pip-package
