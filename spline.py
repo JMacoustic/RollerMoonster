@@ -1,14 +1,5 @@
 import numpy as np
 
-test_points = np.array([
-    [0, 0, 0],
-    [1, 0, 0],
-    [2, 1, 0],
-    [3, 2, 1],
-    [5, 5, 3],
-    [6, 2, 4]
-])
-
 def Bezier1D(cp0, cp1, cp2, cp3):
     basis_mat = np.array([[1, -3, 3, -1],
                         [0, 3, -6, 3],
@@ -46,7 +37,7 @@ class NatCubeSpline:
             A[i + N - 2][2*i] = 1
             A[i + N - 2][2*i + 1] = -2
             A[i + N - 2][2*(i + 1)] = 2
-            A[i + N - 2][2*(i + 1)] = -1 
+            A[i + N - 2][2*(i + 1)+1] = -1 
 
         # extra 2 more constraints
         if self.closed:
@@ -75,68 +66,39 @@ class NatCubeSpline:
         self.curve_list = []
         for d in range(self.dim):
             segments = []
-            for i in range(self.N-2):
+            for i in range(self.N-1):
                 curve = Bezier1D(self.pass_points[i][d], self.control_points[i][0][d], self.control_points[i][1][d], self.pass_points[i+1][d])
                 segments.append(curve)
             self.curve_list.append(segments)
+    
+    def coordinate(self, u):
+        n_segments = self.N-1
+        seg_length = 1.0/n_segments
+        if u <= 0:
+            seg = 0
+            t = 0.0
+        elif u >= 1:
+            seg = n_segments-1
+            t = 1.0
+        else:
+            seg = int(u*n_segments)
+            t = (u-seg*seg_length) / seg_length
 
-test = NatCubeSpline(points=test_points)
+        point = [self.curve_list[d][seg](t) for d in range(self.dim)]
+        return np.array(point)
 
-"""
-    def set_control_points(self):
-        point_x = self.point_T[0]
-        point_y = self.point_T[1]
-        point_z = self.point_T[2]
-        N = self.N
-        
-        A = np.zeros((2*self.N-2, 2*self.N-2))
-        Bx = np.zeros((2*self.N-2))
-        By = np.zeros((2*self.N-2))
-        Bz = np.zeros((2*self.N-2))
+    def tangent(self, u):
+        n_segments = self.N-1
+        seg_length = 1.0/n_segments
+        if u <= 0:
+            seg = 0
+            t = 0.0
+        elif u >= 1:
+            seg = n_segments-1
+            t = 1.0
+        else:
+            seg = int(u*n_segments)
+            t = (u-seg*seg_length) / seg_length
 
-        for i in range(self.N-2):
-            # tangency
-            A[i][2*i+1] = 1
-            A[i][2*(i+1)] = 1
-            Bx[i] = 2*point_x[i+1]
-            By[i] = 2*point_y[i+1]
-            Bz[i] = 2*point_z[i+1]
-
-            # curvature
-            A[i+self.N-2][2*i] = 1
-            A[i+self.N-2][2*i+1] = -2
-            A[i+self.N-2][2*(i+1)] = 2
-            A[i+self.N-2][2*(i+1)] = -1
-        
-        # extra constraints: closed case 
-        if self.closed:
-            A[2*self.N-4][0] = 1
-            A[2*self.N-4][-1] = 1
-            Bx[2*self.N-4] = 2*point_x[0]
-            By[2*self.N-4] = 2*point_y[0]
-            Bz[2*self.N-4] = 2*point_z[0]
-
-            A[2*self.N-3][-2] = 1
-            A[2*self.N-3][-1] = -2
-            A[2*self.N-3][0] = 2
-            A[2*self.N-3][1] = -1
-
-        else: # open case
-            A[2*self.N-4][0] = -2
-            A[2*self.N-4][1] = 1
-            Bx[2*self.N-4] = -point_x[0]
-            By[2*self.N-4] = -point_y[0]
-            Bz[2*self.N-4] = -point_z[0]
-
-            A[2*self.N-3][-2] = 1
-            A[2*self.N-3][-1] = -2
-            Bx[2*self.N-3] = -point_x[self.N-1]
-            By[2*self.N-3] = -point_y[self.N-1]
-            Bz[2*self.N-3] = -point_z[self.N-1]
-
-        cp_x = np.linalg.solve(A, Bx)
-        cp_y = np.linalg.solve(A, By)
-        cp_z = np.linalg.solve(A, Bz)
-
-        self.control_points = np.transpose(np.vstack(cp_x, cp_y, cp_z)).reshape(-1, 2, 3)
-        """
+        tangent = [self.curve_list[d][seg].deriv()(t) / seg_length for d in range(self.dim)]
+        return np.array(tangent)
