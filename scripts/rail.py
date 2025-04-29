@@ -89,6 +89,5 @@ class Cart:
             self.frame = "frenet_frame" 
         else:
             self.frame = "up_frame"
-        
         self.cart.delete()
         self.create_cart()    

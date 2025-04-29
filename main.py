@@ -36,6 +36,13 @@ ground_4.scale_x = 0.05
 ground_4.scale_y = 0.05
 ground_4.rotation = -90
 
+print("\n-------------------------------Instructions-------------------------------")
+print("[P]: Start/Pause simulation")
+print("[R]: Reset simulation to initial state")
+print("[F]: Switch between Modified Frenet Frame and Head-up Frame")
+print("[1]: Switch to 'first person view'(ride a roller coaster)")
+print("[3]: Switch to 'third person view' (external camera with trackball control)")
+print("--------------------------------------------------------------------------")
 
 @window.event
 def on_resize(width, height):
@@ -69,13 +76,14 @@ def on_key_press( key, mods ):
 			event.moving = True
 	
 	if key==pyglet.window.key.F:
-		print("Generating new rails...Please wait")
+		print("\nGenerating new rails...Please wait")
+		
 		rail.switch_frame()
 		cart.switch_frame()
 		if rail.frame == "frenet_frame":
-			print("Successfully switched to Modified Frenet Frame")
+			print("Successfully switched to 'Modified Frenet Frame'")
 		elif rail.frame == "up_frame":
-			print("Successfully switched to Head Up Frame")
+			print("Successfully switched to 'Head-Up Frame'")
 
 	if key==pyglet.window.key.R:
 		counter.reset()
