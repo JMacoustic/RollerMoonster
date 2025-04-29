@@ -6,16 +6,7 @@ from math import pi, sin, cos
 from pyglet.math import Mat4
 
 
-def projective_scale(cls: type[Mat4], x_scale = 1.0, y_scale =1.0, z_scale=1.0, taper = 0.1, correction = 0.4) -> Mat4:
-    """Create a Mat4 projection matrix with a shear effect to form a truncated square pyramid."""
-
-    return cls(x_scale, 0, 0, 0,  
-               0, y_scale, 0, correction,  
-               0, 0, z_scale, 0,  
-               0, taper, 0, 1)
-
 class Cube(model.Model):
-
     def __init__(self, width=1.0, height=1.0, depth=1.0, color=(1.0, 1.0, 1.0, 1.0),
                  material=None, batch=None, group=None, program=None):
         self._width = width

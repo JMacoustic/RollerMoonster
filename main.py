@@ -2,47 +2,40 @@
 # This script is based on above repository and adjusted for additional functionalities
 
 import pyglet 
-from scripts import camera, motion, utils
-from scripts.snakemodel import Snake
 from pyglet.gl import *
-import math
+import numpy as np
+from scripts.rail import Rail, Cart
+from scripts.spline import NatCubeSpline
+from scripts import camera, utils
+
 
 width  = 1500
 height = 1000
 
-window = pyglet.window.Window(width, height, resizable=True, caption="Snake crawls and attacks")
+window = pyglet.window.Window(width, height, resizable=True, caption="Roller-Moonster")
 program = pyglet.graphics.get_default_shader()
-snakeBatch = pyglet.graphics.Batch()
 groundBatch = pyglet.graphics.Batch()
+railBatch = pyglet.graphics.Batch()
+event = utils.EventWatcher()
+counter=utils.TimeCounter(0)
 
 ground = pyglet.image.load('texture/ground2.png')
-ground_1 = pyglet.sprite.Sprite(img=ground, x=0, y=-18, z=-0.1, batch=groundBatch)
+ground_1 = pyglet.sprite.Sprite(img=ground, x=0, y=0, z=-4, batch=groundBatch)
 ground_1.scale_x = 0.05
 ground_1.scale_y = 0.05
-ground_2 = pyglet.sprite.Sprite(img=ground, x=0, y=-18, z=-0.1, batch=groundBatch)
+ground_2 = pyglet.sprite.Sprite(img=ground, x=0, y=0, z=-4, batch=groundBatch)
 ground_2.scale_x = 0.05
 ground_2.scale_y = 0.05
 ground_2.rotation = 90
-ground_3 = pyglet.sprite.Sprite(img=ground, x=0, y=-18, z=-0.1, batch=groundBatch)
+ground_3 = pyglet.sprite.Sprite(img=ground, x=0, y=0, z=-4, batch=groundBatch)
 ground_3.scale_x = 0.05
 ground_3.scale_y = 0.05
 ground_3.rotation = 180
-ground_4 = pyglet.sprite.Sprite(img=ground, x=0, y=-18, z=-0.1, batch=groundBatch)
+ground_4 = pyglet.sprite.Sprite(img=ground, x=0, y=0, z=-4, batch=groundBatch)
 ground_4.scale_x = 0.05
 ground_4.scale_y = 0.05
 ground_4.rotation = -90
 
-
-tailcounter = utils.TimeCounter(t0=0)
-stopcounter = utils.TimeCounter(t0=0)
-liftcounter = utils.TimeCounter(t0=0)
-lowercounter = utils.TimeCounter(t0=0)
-attackcounter = utils.TimeCounter(t0=0)
-event = utils.EventWatcher()
-
-color1 = (0.2, 1.0, 1.0, 1.0)
-color2 = (1.0, 1.0, 0.2, 1.0)
-newSnake = Snake(color1, color2, batch = snakeBatch)
 
 @window.event
 def on_resize(width, height):
@@ -53,43 +46,20 @@ def on_resize(width, height):
 def on_draw():
 	window.clear()
 	camera.apply(window)
-	snakeBatch.draw()
 	groundBatch.draw()
+	railBatch.draw()
 
 @window.event
 def on_key_press( key, mods ):	
 	if key==pyglet.window.key.Q:
 		pyglet.app.exit()
-
-	if key == pyglet.window.key._1 and event.wavetail==False:
-		print("key 1 pressed. Start moving")
-		tailcounter.reset()
-		event.wavetail = True
-
-	if key==pyglet.window.key._2 and event.wavetail==True and event.moving == True:
-		print("key 2 pressed. Stop moving")
-		stopcounter.reset()
-		event.wavetail = False
 	
-	if key==pyglet.window.key._3 and event.raisehead==False and event.headsup==False:
-		print("key 3 pressed. Start lifting head")
-		liftcounter.reset()
-		event.raisehead = True
-		event.lowerhead = False
-
-	if key==pyglet.window.key._4 and event.attack==False:
-		if event.headsup==True and event.lowerhead==False:
-			print("key 4 pressed. Start attack")
-			attackcounter.reset()
-			event.attack = True
-		else:
-			print("To attack, first lift the head up by pressing key 3")
-
-	if key==pyglet.window.key._5 and event.lowerhead==False and event.headsup==True:
-		print("key 5 pressed. Start lowering head")
-		lowercounter.reset()
-		event.lowerhead = True
-		event.raisehead = False
+	if key==pyglet.window.key._1:
+		event.thirdview = False
+	
+	if key==pyglet.window.key._3:
+		event.thirdview = True
+		camera.detach_spline()
 	
 @window.event
 def on_mouse_release( x, y, button, mods ):
@@ -131,67 +101,53 @@ def on_mouse_scroll(x, y, scroll_x, scroll_y):
 
 
 def update(dt):
-	orientation = motion.rest_angles
-	wave_orient = motion.null_angles
+	counter.update_time(dt)
 
-	if event.wavetail==True:
-		tailcounter.update_time(dt=dt)
-		wave_orient = motion.sinwaveSnake(current_t=tailcounter.t, height=0.3, phase=0, width=math.pi/4, frequency=5)
-		wave_orient = motion.interpolation(motion.null_angles, wave_orient, tailcounter.t) # start moving in 1 second
-		orientation = motion.superposition(wave_orient, motion.rest_angles)
-		ground_1.rotation += 4.3*dt 
-		ground_2.rotation += 4.3*dt
-		ground_3.rotation += 4.3*dt
-		ground_4.rotation += 4.3*dt
-		if tailcounter.t > 1:
-			event.moving = True
-
-	if event.wavetail==False and event.moving == True:
-		tailcounter.update_time(dt=dt)
-		stopcounter.update_time(dt=dt)
-		wave_orient = motion.sinwaveSnake(current_t=tailcounter.t, height=0.3, phase=0, width=math.pi/4, frequency=5)
-		wave_orient = motion.interpolation(wave_orient, motion.null_angles, stopcounter.t) # start moving in 1 second
-		orientation = motion.superposition(wave_orient, motion.rest_angles)
-		# orientation = motion.interpolation(orientation, motion.rest_angles, stopcounter.t) # start moving in 1 second
-		ground_1.rotation += (4-2*stopcounter.t)*dt 
-		ground_2.rotation += (4-2*stopcounter.t)*dt
-		ground_3.rotation += (4-2*stopcounter.t)*dt
-		ground_4.rotation += (4-2*stopcounter.t)*dt
-		if stopcounter.t > 1:
-			event.moving = False
-
-	if event.raisehead==True:
-		liftcounter.update_time(dt=dt)
-		end_t1 = 1
-		lift_orient = motion.raisehead(start_angles=motion.rest_angles, current_t=liftcounter.t, start_t=0, end_t=end_t1)
-		if liftcounter.t > end_t1:
-			event.headsup = True
-		orientation = motion.superposition(wave_orient, lift_orient)
-
-	if event.lowerhead==True and event.headsup==True:
-		lowercounter.update_time(dt=dt)
-		end_t2 = 1
-		lower_orient = motion.lowerhead(start_angles=motion.raisehead_angles, current_t=lowercounter.t, start_t=0, end_t=end_t2)
-		if lowercounter.t > end_t2:
-			event.headsup=False
-		orientation = motion.superposition(wave_orient, lower_orient)
+	if s.value >= smax:
+		s.reset()
+	s.add(spline.speed(u.value) * dt)
+	u.value = spline.inv_length(s.value)
+	cart.move(u.value)
 	
-	if event.attack==True and event.headsup==True:
-		attackcounter.update_time(dt=dt)
-		end_t3=0.5
-		attack_orient = motion.attack(start_angles=motion.raisehead_angles, current_t=attackcounter.t, start_t=0, end_t=end_t3)
-		if attackcounter.t > end_t3:
-			event.attack=False
-			event.headsup=True
-		orientation = motion.superposition(wave_orient, attack_orient)
+	if event.thirdview == False:
+		camera.follow_spline(spline, u.value, frame=frame)
+	elif event.thirdview ==True:
+		camera.remember_thirdview()
+		
+		
+passing_points = np.array([
+    [0, 0, 0],
+    [-1, -2, 0],
+	[1, -2, -1],
+    [2, 2, 0],
+    [1, 3, 5],
+    [1, 2, 5],
+    [4, 1, 5],
+    [4.5, 1.5, 3],
+	[5, 4, 1],
+	[4.5, 6, 2],
+	[4, 4, 4],
+	[3.5, 4, 1],
+    [3, 6, 0],
+	[1, 5, -1],
+    [3, 1, 0],
+    [0, 0, 0]
+])
 
+# initialize spline, rail, and cart
+frame = "frenet_frame"
+spline = NatCubeSpline(passing_points)
+rail = Rail(spline=spline, thickness=0.1, width = 1, n_cylinders=500, n_plates=50, batch=railBatch, frame=frame)
+cart = Cart(spline=spline, batch=railBatch, frame=frame)
 
-	newSnake.set_orientation(orientation)
-
-
+# initialize simulation parameters
+s = utils.value(0)
+u = utils.value(0)
+tmax = 100 # Stop after 100 seconds
+smax = spline.length(spline.umax) # to reset length after 1 loop
 
 pyglet.clock.schedule_interval(update, 1/60)
-glClearColor(0.0, 0.1, 0.3, 1.0)
+glClearColor(0.529, 0.808, 0.922, 1.0)
 glEnable(GL_DEPTH_TEST)
 glClearDepth(1.0)
 glDepthFunc(GL_LESS)

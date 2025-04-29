@@ -4,7 +4,6 @@
 
 from pyglet.gl import *
 from pyglet.math import Mat4, Vec3, Quaternion
-
 import math
 
 aspectRatio = 1.0
@@ -14,10 +13,13 @@ farPlane    = 10000.0
 beginu, beginv   = 0, 0
 height, width    = 0, 0
 
-curquat    = [-0.36315166267487914, -0.2656206482393097, 0.48607924457270246, 0.7491952409893102]
+rollermat = Mat4()
+thirdview_quat = [1, 0, 0, 0]
+thirdview_dolly = 8.0
+dolly      = thirdview_dolly
+curquat    = thirdview_quat
 lastquat   = [1,0,0,0]
-tx, ty, tz = 0.0, 0.0, 0.0
-dolly      = 8.0
+tx, ty, tz = -2.0, -2.0, 0.0
 
 TRACKBALLSIZE = 0.6
 
@@ -72,7 +74,7 @@ def apply(window):
     
     q = Quaternion(curquat[0],curquat[1],curquat[2],curquat[3])
         
-    window.view = Mat4.from_translation(Vec3(tx,ty,tz)) @ Mat4.from_translation(Vec3(0.0, 0.0, -dolly)) @ Quaternion.to_mat4(q)
+    window.view =  rollermat @ Mat4.from_translation(Vec3(tx,ty,tz)) @ Mat4.from_translation(Vec3(0.0, 0.0, -dolly)) @ Quaternion.to_mat4(q)
       
 
 def trackball( p1x, p1y, p2x, p2y ):
@@ -110,8 +112,7 @@ def project_to_sphere( r, x, y ):
         t = r / 1.41421356237309504880
         z = t*t / d
     return z
-    
-    
+        
 def multiply( q1, q2 ):
     d = [q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3],
          q1[0]*q2[1] + q1[1]*q2[0] + q1[2]*q2[3] - q1[3]*q2[2],
@@ -124,4 +125,41 @@ def multiply( q1, q2 ):
     d[2] /= l
     d[3] /= l
     return d
+
+def follow_spline(spline, u, frame="up_frame"):
+    global tx, ty, tz
+    global curquat
+    global rollermat
+    global dolly
+
+    if frame == "up_frame":
+        x, y, z = spline.up_frame(u)
+    if frame == "frenet_frame":
+        x, y, z = spline.frenet_frame(u)
+
+    rollermat = Mat4.look_at(Vec3(0, 0, 0), Vec3(*z), Vec3(*y)) @ Mat4.from_translation(-0.15*Vec3(*y)) @ Mat4.from_translation(-0.05*Vec3(*z))
+
+    tx = -spline.coordinate(u)[0]
+    ty = -spline.coordinate(u)[1]
+    tz = -spline.coordinate(u)[2]
+    dolly = 0
+    curquat = [1, 0, 0, 0]
+
+def detach_spline():
+    global curquat
+    global dolly
+    global tx, ty, tz
+    global rollermat
+
+    curquat = thirdview_quat
+    dolly = 8.0
+    tx, ty, tz = -2.0, -2.0, 0.0
+    rollermat = Mat4()
+    
+def remember_thirdview():
+    global thirdview_quat
+    global thirdview_dolly
+
+    thirdview_quat = curquat
+    thirdview_dolly = dolly
 
