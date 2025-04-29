@@ -1,7 +1,10 @@
-# Crawling Snake Model
-![Demo GIF](report/demo_gif.gif)
+# Roller-Moonster
+<p align="center">
+  <img src="report/demo_1stview.gif" width="49%" />
+  <img src="report/demo_3rdview.gif" width="49%" />
+</p>
 
-This is a hierarchical snake model implemented using pyglet, by Mechanical Engineering undergraduate student in SNU, as a homework project. Camera codes and basic skeletons are referenced from [SNU_ComputerGraphics](https://github.com/SNU-IntelligentMotionLab/SNU_ComputerGraphics_).
+This is a roller coaster simulation implemented using pyglet, by Mechanical Engineering undergraduate student in SNU, as a homework project. Camera codes and basic skeletons are referenced from [SNU_ComputerGraphics](https://github.com/SNU-IntelligentMotionLab/SNU_ComputerGraphics_).
 
 ## Requirements
 
@@ -31,18 +34,18 @@ Finally, go into the cloned repo and create environment.
 
 Now, simply activate conda environment and run the code.
 
-    conda activate snake_env
+    conda activate roller_env
     python main.py
 
 ## How to play
 
-1. Keyboard controls. You can press multiple buttons together. Some will work, some won't. Test it out!
-    - key 1: start moving. sorry but you cannot change direction
-    - key 2: stop moving.
-    - key 3: raise head.
-    - key 4: attack!! you cannot attack if the head is not raised yet.
-    - key 5: lower head.
+#### 🧑‍💻 Keyboard
+- ``P`` — Start / Pause simulation  
+- ``R`` — Reset simulation to initial state  
+- ``F`` — Switch between "Modified Frenet Frame" and "Head-up Frame" (may take a few seconds to regenerate)  
+- ``1`` — Switch to **first-person view** (ride the roller coaster)  
+- ``2`` — Switch to **third-person view** (external camera with trackball control)
 
-2. Mouse controls.
-    - Grab-and-Drag: change the view by trackball viewer. It should be intuitive.
-    - Scroll: zoom in and out.
+#### 🖱️ Mouse
+- ``left click + drag`` — Intuitively rotate the view using a trackball-style controller (in third-person view)  
+- ``scroll wheel`` — Zoom in and out

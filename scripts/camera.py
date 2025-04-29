@@ -14,8 +14,8 @@ beginu, beginv   = 0, 0
 height, width    = 0, 0
 
 rollermat = Mat4()
-thirdview_quat = [1, 0, 0, 0]
-thirdview_dolly = 8.0
+thirdview_quat = [0.7251701305220415, 0.4706033757159692, 0.3235810152747336, 0.3846505831493727]
+thirdview_dolly = 12.0
 dolly      = thirdview_dolly
 curquat    = thirdview_quat
 lastquat   = [1,0,0,0]
@@ -152,7 +152,7 @@ def detach_spline():
     global rollermat
 
     curquat = thirdview_quat
-    dolly = 8.0
+    dolly = thirdview_dolly
     tx, ty, tz = -2.0, -2.0, 0.0
     rollermat = Mat4()
     

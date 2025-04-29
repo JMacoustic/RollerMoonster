@@ -1,7 +1,7 @@
 import numpy as np
 import sympy as sp
 from math import sqrt
-from utils import normalize, np2sp, integrate
+from scripts.utils import normalize, np2sp, integrate
 
 
 x = sp.symbols('x')
@@ -33,7 +33,8 @@ class NatCubeSpline:
         self.set_hmax(div=1000)
     
     def limit_u(self, u):
-        return (u - self.umin) % (self.umax - self.umin) + self.umin
+        limit = (u - self.umin) % (self.umax - self.umin) + self.umin
+        return u
 
     def set_control_points(self):
         N = self.N
@@ -89,6 +90,7 @@ class NatCubeSpline:
                 sp_segments.append(np2sp(curve))
             self.curve_list.append(segments)
             self.sp_curve_list.append(sp_segments)
+
         self.setup_differentials()
 
     def setup_differentials(self):
@@ -101,7 +103,7 @@ class NatCubeSpline:
                             sp.diff(self.sp_curve_list[2][i])**2)
             ds_func = sp.lambdify(x, ds_expr, 'numpy') 
 
-            total = self.cumulative_lengths[-1] + integrate(ds_func, 0, 1, n_intervals=10)
+            total = self.cumulative_lengths[-1] + integrate(ds_func, 0, 1, n_intervals=20)
             self.cumulative_lengths.append(total)
             self.ds_list.append(ds_func)
     
@@ -169,8 +171,8 @@ class NatCubeSpline:
         u = self.limit_u(u)
 
         z = normalize(self.tangent(u))
-        y = normalize(self.binormal(u-self.du))
-        x = normalize(np.cross(y, z))
+        x = normalize(self.binormal(u-self.du))
+        y = normalize(np.cross(x, z))
 
         frame = np.vstack((x, y, z))
         return frame
@@ -193,7 +195,7 @@ class NatCubeSpline:
 
         if fraction > 0:
             ds = self.ds_list[seg]
-            length += integrate(ds, 0, fraction, n_intervals=10)
+            length += integrate(ds, 0, fraction, n_intervals=20)
         
         return length
     
@@ -239,4 +241,4 @@ class NatCubeSpline:
             z = self.coordinate(i*du)[2]
             if z > self.hmax:
                 self.hmax = z
-        self.hmax +=0.05
+        self.hmax +=0.02

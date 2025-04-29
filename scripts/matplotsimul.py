@@ -1,6 +1,6 @@
-from spline import NatCubeSpline
+from scripts.spline import NatCubeSpline
 import numpy as np
-import utils
+from scripts import utils
 import matplotlib.pyplot as plt
 
 test_counter = utils.TimeCounter(0)

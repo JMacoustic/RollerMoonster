@@ -90,6 +90,11 @@ class Cube(model.Model):
     def move(self, moveMat):
         self.movement = moveMat @ self.movement
         self.matrix = self.movement @ self.deformation
+    
+    def delete(self):
+        if self._vlist is not None:
+            self._vlist.delete()
+            self._vlist = None
 
 
 class Sphere(model.Model):
@@ -157,6 +162,11 @@ class Sphere(model.Model):
     def move(self, moveMat):
         self.movement = moveMat @ self.movement
         self.matrix = self.movement @ self.deformation
+    
+    def delete(self):
+        if self._vlist is not None:
+            self._vlist.delete()
+            self._vlist = None
 
 
 class Cylinder(model.Model):
@@ -238,6 +248,11 @@ class Cylinder(model.Model):
     def move(self, moveMat):
         self.movement = moveMat @ self.movement
         self.matrix = self.movement @ self.deformation
+    
+    def delete(self):
+        if self._vlist is not None:
+            self._vlist.delete()
+            self._vlist = None
 
 class Tripillar(model.Model):
     def __init__(self, width=1.0, height=1.0, depth=1.0, color=(1.0, 1.0, 1.0, 1.0),
@@ -323,3 +338,7 @@ class Tripillar(model.Model):
         self.movement = moveMat @ self.movement
         self.matrix = self.movement @ self.deformation
 
+    def delete(self):
+        if self._vlist is not None:
+            self._vlist.delete()
+            self._vlist = None

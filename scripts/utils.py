@@ -16,6 +16,7 @@ class TimeCounter:
 class EventWatcher:
 	def __init__(self):
 		self.thirdview = False
+		self.moving = False
 
 class value:
 	def __init__(self, value0):

@@ -58,9 +58,32 @@ def on_key_press( key, mods ):
 		event.thirdview = False
 	
 	if key==pyglet.window.key._3:
+		if event.thirdview == False:
+			camera.detach_spline()
 		event.thirdview = True
-		camera.detach_spline()
+
+	if key==pyglet.window.key.P:
+		if event.moving:
+			event.moving = False
+		else:
+			event.moving = True
 	
+	if key==pyglet.window.key.F:
+		print("Generating new rails...Please wait")
+		rail.switch_frame()
+		cart.switch_frame()
+		if rail.frame == "frenet_frame":
+			print("Successfully switched to Modified Frenet Frame")
+		elif rail.frame == "up_frame":
+			print("Successfully switched to Head Up Frame")
+
+	if key==pyglet.window.key.R:
+		counter.reset()
+		event.moving = False
+		s.reset()
+		u.reset()
+		cart.move(u.value)
+
 @window.event
 def on_mouse_release( x, y, button, mods ):
 	global mouseRotatePressed, mouseMovePressed, mouseDollyPressed
@@ -101,18 +124,20 @@ def on_mouse_scroll(x, y, scroll_x, scroll_y):
 
 
 def update(dt):
-	counter.update_time(dt)
+	if event.moving:
+		counter.update_time(dt)
 
-	if s.value >= smax:
-		s.reset()
-	s.add(spline.speed(u.value) * dt)
-	u.value = spline.inv_length(s.value)
-	cart.move(u.value)
-	
+		if s.value >= smax:
+			s.reset()
+		s.add(spline.speed(u.value) * dt)
+		u.value = spline.inv_length(s.value)
+		cart.move(u.value)
+		
 	if event.thirdview == False:
-		camera.follow_spline(spline, u.value, frame=frame)
+		camera.follow_spline(spline, u.value, frame=rail.frame)
 	elif event.thirdview ==True:
 		camera.remember_thirdview()
+
 		
 		
 passing_points = np.array([
@@ -130,7 +155,6 @@ passing_points = np.array([
 	[3.5, 4, 1],
     [3, 6, 0],
 	[1, 5, -1],
-    [3, 1, 0],
     [0, 0, 0]
 ])
 
@@ -146,7 +170,7 @@ u = utils.value(0)
 tmax = 100 # Stop after 100 seconds
 smax = spline.length(spline.umax) # to reset length after 1 loop
 
-pyglet.clock.schedule_interval(update, 1/60)
+pyglet.clock.schedule_interval(update, 1/120)
 glClearColor(0.529, 0.808, 0.922, 1.0)
 glEnable(GL_DEPTH_TEST)
 glClearDepth(1.0)
